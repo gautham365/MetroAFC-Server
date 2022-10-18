@@ -1,5 +1,5 @@
 #!/bin/bash
-pm2 describe metro-server > /dev/null
+sudo pm2 describe metro-server > /dev/null
 RUNNING=$?
 
 if [ "${RUNNING}" -ne 0 ]; then
