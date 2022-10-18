@@ -1,0 +1,10 @@
+{
+    "database": {
+    "host": "localhost",
+    "dbPort": 3306,
+    "username": "admin",
+    "password": "Gucci@123",
+    "db": "metroafc"
+    },
+    "port": 8000
+}
