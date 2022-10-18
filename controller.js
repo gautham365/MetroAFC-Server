@@ -224,7 +224,7 @@ const controller = {
         let { username } = req.body;
         const db = req.app.get('db');
 
-        db.query(`select * from journeys;`, async (err, rows, fields) => {
+        db.query(`select * from journeys order by last_updated;`, async (err, rows, fields) => {
             if (err) {
                 console.log('Error: ',err.sqlMessage);
                 return res.status(500).json({error: err.sqlMessage});
