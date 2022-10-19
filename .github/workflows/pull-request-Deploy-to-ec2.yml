@@ -10,14 +10,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Deploy to EC2-ty
-        uses: easingthemes/ssh-deploy@main
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
-          REMOTE_HOST: ${{ secrets.HOST_DNS }}
-          REMOTE_USER: ${{ secrets.USERNAME }}
-          TARGET: ${{ secrets.TARGET_DIR }}
-
       - name: Cache dependencies
         uses: actions/cache@v2
         with:
@@ -28,8 +20,23 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: allow +x to pm2_runner.sh
-        run: chmod +x ./pm2_runner.sh
+      - name: Deploy to EC2-ty
+        uses: easingthemes/ssh-deploy@main
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          REMOTE_HOST: ${{ secrets.HOST_DNS }}
+          REMOTE_USER: ${{ secrets.USERNAME }}
+          TARGET: ${{ secrets.TARGET_DIR }}
+          EXCLUDE: "/dist/, /node_modules/"
 
-      - name: Start the app
-        run: bash ./pm2_runner.sh
+      - name: Connect and run deploy script
+        uses: appleboy/ssh-action@v0.1.5
+        with:
+          host: ${{ secrets.HOST_DNS }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ${{ secrets.TARGET_DIR }}
+            chmod +x ./pm2_runner.sh
+            bash ./pm2_runner.sh
+
