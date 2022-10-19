@@ -28,13 +28,12 @@ jobs:
           TARGET: ${{ secrets.TARGET_DIR }}
           EXCLUDE: "/dist/, /node_modules/"
 
-      - name: SSH Remote Commands
+      - name: Connect and run deploy script
         uses: appleboy/ssh-action@v0.1.5
         with:
           host: ${{ secrets.HOST_DNS }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          port: ${{ secrets.PORT }}
           script: |
             cd ${{ secrets.TARGET_DIR }}
             chmod +x ./pm2_runner.sh
