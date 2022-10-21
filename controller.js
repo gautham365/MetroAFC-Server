@@ -237,6 +237,14 @@ const controller = {
             return res.json({journeys: rows})
         });
     },
+    finalStatusWH: (req, res) => {
+        console.log("get",req.query);
+        res.json({status: "OK"});
+    },
+    finalStatusWHP: (req, res) => {
+        console.log("post",req.body);
+        res.json({status: "OK"});
+    },
 };
 
 // export the controller
