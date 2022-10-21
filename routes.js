@@ -16,5 +16,8 @@ router.post('/journeys/all', controller.isLoggedIn, controller.getAllJourneys);
 router.post('/entry', controller.isLoggedIn ,controller.entry);
 router.post('/exit', controller.isLoggedIn ,controller.exit);
 
+router.get('/webhook/payment/finalStatus', controller.finalStatusWH);
+router.post('/webhook/payment/finalStatus', controller.finalStatusWHP);
+
 // export the routes
 module.exports = router;
