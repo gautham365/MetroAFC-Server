@@ -1,3 +1,5 @@
+const expressTypes = require('@types/express-serve-static-core')
+const mysqlTypes = require('@types/mysql')
 function calculateFare(c1,c2) {
     return Math.abs(c1[0]-c2[0]) + Math.abs(c1[1]-c2[1])
 }
@@ -8,14 +10,15 @@ function delay(time) {
 
 // define the controller
 const controller = {
-    hello: (req, res) => {
+    hello: (/** @type {expressTypes.Request} */req, /** @type {expressTypes.Response */res) => {
         // call the model
         const data = {data: "Hello World!"};
         // send the response
         res.send(data);
     },
-    verifyToken: (req, res) => {
-        const db = req.app.get('db');
+    verifyToken: (/** @type {expressTypes.Request} */req, /** @type {expressTypes.Response */res) => {
+        /** @type {mysqlTypes.Pool}  */
+        const db  = req.app.get('db');
         let token = req.query.token || "";
         db.query(`select username from sessions where token="${token}";`, async (err, rows, fields) => {
             if (err) {
@@ -39,10 +42,11 @@ const controller = {
             });
         });
     },
-    isLoggedIn: async (req, res, next) => {
+    isLoggedIn: async (/** @type {expressTypes.Request} */req, /** @type {expressTypes.Response */res, next) => {
         await delay(1000);
 
-        const db = req.app.get('db');
+        /** @type {mysqlTypes.Pool}  */
+        const db  = req.app.get('db');
         console.log(req.body);
         db.query(`select username from sessions where token="${req.body.token || ""}";`, async (err, rows, fields) => {
             if (err) {
@@ -57,11 +61,12 @@ const controller = {
             next();
         });
     },
-    login: async (req, res) => {
+    login: async (/** @type {expressTypes.Request} */req, /** @type {expressTypes.Response */res) => {
         await delay(1000);
         let { username, password, privilege } = req.body;
         privilege = privilege ? privilege : "USER"
-        const db = req.app.get('db');
+        /** @type {mysqlTypes.Pool}  */
+        const db  = req.app.get('db');
         // console.log(username, password);
         db.query('SELECT role FROM credentials WHERE username = ? AND password = ?', [username || "", password || ""], (err, rowsM, fields) => {
             if (err) {
@@ -99,10 +104,11 @@ const controller = {
             
         });
     },
-    entry: async (req, res) => {
+    entry: async (/** @type {expressTypes.Request} */req, /** @type {expressTypes.Response */res) => {
 
         let { username, code } = req.body;
-        const db = req.app.get('db');
+        /** @type {mysqlTypes.Pool}  */
+        const db  = req.app.get('db');
 
         
         db.query(`select current_status, card_number, balance from profile where username="${username}";`, async (err, rows, fields) => {
@@ -141,7 +147,7 @@ const controller = {
             
         });
     },
-    exit: (req, res) => {
+    exit: (/** @type {expressTypes.Request} */req, /** @type {expressTypes.Response */res) => {
         let { username, code } = req.body;
         const db = req.app.get('db') ;
 
@@ -203,9 +209,10 @@ const controller = {
         });
         });
     },
-    getAllStations: (req, res) => {
+    getAllStations: (/** @type {expressTypes.Request} */req, /** @type {expressTypes.Response */res) => {
 
-        const db = req.app.get('db');
+        /** @type {mysqlTypes.Pool}  */
+        const db  = req.app.get('db');
 
         db.query(`select * from stations;`, async (err, rows, fields) => {
             if (err) {
@@ -220,9 +227,10 @@ const controller = {
             return res.json({stations: rows})
         });
     },
-    getAllJourneys: (req, res) => {
+    getAllJourneys: (/** @type {expressTypes.Request} */req, /** @type {expressTypes.Response */res) => {
         let { username } = req.body;
-        const db = req.app.get('db');
+        /** @type {mysqlTypes.Pool}  */
+        const db  = req.app.get('db');
 
         db.query(`select * from journeys;`, async (err, rows, fields) => {
             if (err) {
@@ -237,12 +245,15 @@ const controller = {
             return res.json({journeys: rows})
         });
     },
-    finalStatusWH: (req, res) => {
+    finalStatusWH: (/** @type {expressTypes.Request} */req, /** @type {expressTypes.Response */res) => {
         console.log("get",req.query);
         res.json({status: "OK"});
     },
-    finalStatusWHP: (req, res) => {
-        console.log("post",req.body);
+    finalStatusWHP: (/** @type {expressTypes.Request} */req, /** @type {expressTypes.Response */res) => {
+        /** @type {mysqlTypes.Pool}  */
+        const db  = req.app.get('db');
+        
+        console.log("post",req);
         res.json({status: "OK"});
     },
 };
