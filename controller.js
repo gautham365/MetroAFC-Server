@@ -1,5 +1,5 @@
-const expressTypes = require('@types/express-serve-static-core')
-const mysqlTypes = require('@types/mysql')
+const expressTypes = require('express')
+const mysqlTypes = require('mysql')
 function calculateFare(c1,c2) {
     return Math.abs(c1[0]-c2[0]) + Math.abs(c1[1]-c2[1])
 }
@@ -43,7 +43,7 @@ const controller = {
         });
     },
     isLoggedIn: async (/** @type {expressTypes.Request} */req, /** @type {expressTypes.Response */res, next) => {
-        await delay(1000);
+        // await delay(1000);
 
         /** @type {mysqlTypes.Pool}  */
         const db  = req.app.get('db');
@@ -62,7 +62,7 @@ const controller = {
         });
     },
     login: async (/** @type {expressTypes.Request} */req, /** @type {expressTypes.Response */res) => {
-        await delay(1000);
+        // await delay(1000);
         let { username, password, privilege } = req.body;
         privilege = privilege ? privilege : "USER"
         /** @type {mysqlTypes.Pool}  */
