@@ -637,7 +637,7 @@ const controller = {
 
     // insert into payments table and check if unique
     db.query(
-      `select txn_amount,agent from payments where payment_id="${ORDERID}"`,
+      `select txn_amount,agent,username from payments where payment_id="${ORDERID}"`,
       async (err, rows, fields) => {
         if (err) {
           console.log("Error: ", err.sqlMessage);
@@ -656,6 +656,14 @@ const controller = {
               return res.status(400).json({ error: err.sqlMessage });
             }
             // console.log(rows[0]);
+
+            // update balance in profile
+            db.query(`update profile set balance=balance+${TXNAMOUNT} where username="${rows[0].username}";`,(err2,rows2,fields2)=>{
+                if(err2){
+                    console.log("Error: ", err.sqlMessage);
+                    res.status(500).json({ error: err.sqlMessage });
+                }
+            })
 
 
             const admin = req.app.get("fcm")
