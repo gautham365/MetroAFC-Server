@@ -18,7 +18,7 @@ const io = new Server(server, {
 });
 
 // handle socket events
-const socketHandler = require('./sockethandler');
+const socketHandler = require('./socketHandler');
 
 
 // import the routes
