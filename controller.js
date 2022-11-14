@@ -324,17 +324,10 @@ const controller = {
     /** @type {expressTypes.Request} */ req,
     /** @type {expressTypes.Response} */ res
   ) => {
-    console.log("get", req.query);
-    res.json({ status: "OK" });
-  },
-  finalStatusWHP: (
-    /** @type {expressTypes.Request} */ req,
-    /** @type {expressTypes.Response} */ res
-  ) => {
     /** @type {mysqlTypes.Pool}  */
     const db = req.app.get("db");
 
-    console.log("post", req);
+    console.log("post", req.body);
     res.json({ status: "OK" });
   },
   abortPayment: (
