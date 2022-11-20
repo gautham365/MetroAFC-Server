@@ -307,7 +307,12 @@ const controller = {
     /** @type {mysqlTypes.Pool}  */
     const db = req.app.get("db");
 
-    db.query(`select * from journeys;`, async (err, rows, fields) => {
+    db.query(`select  j.id  , j.fare , j.last_updated, p.name as username,
+    s.station_name as from_station_code, s1.station_name as to_station_code
+    from journeys j
+    JOIN profile p ON j.username=p.username 
+    JOIN stations s ON j.from_station_code=s.station_code
+    JOIN stations s1 ON j.to_station_code=s1.station_code ORDER BY last_updated DESC ;`, async (err, rows, fields) => {
       if (err) {
         console.log("Error: ", err.sqlMessage);
         return res.status(500).json({ error: err.sqlMessage });
