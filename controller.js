@@ -308,7 +308,7 @@ const controller = {
     const db = req.app.get("db");
 
     db.query(`select  j.id , p.name as username, s.station_name as from_station_code,
-    s1.station_name as to_station_code , j.fare , j.last_updated,from journeys j
+    s1.station_name as to_station_code , j.fare , j.last_updated from journeys j
     JOIN profile p ON j.username=p.username 
     JOIN stations s ON j.from_station_code=s.station_code
     JOIN stations s1 ON j.to_station_code=s1.station_code ORDER BY last_updated DESC ;`, async (err, rows, fields) => {
