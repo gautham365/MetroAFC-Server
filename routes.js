@@ -13,6 +13,7 @@ router.post('/login', controller.login);
 router.post('/station/all', controller.isLoggedIn, controller.getAllStations);
 router.post('/journeys/all', controller.isLoggedIn, controller.getAllJourneys);
 
+router.post('/fetch/balance', controller.isLoggedIn ,controller.fetchBalance);
 router.post('/entry', controller.isLoggedIn ,controller.entry);
 router.post('/exit', controller.isLoggedIn ,controller.exit);
 
