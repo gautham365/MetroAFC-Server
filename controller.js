@@ -148,6 +148,40 @@ const controller = {
       }
     );
   },
+  fetchBalance: async (
+    /** @type {expressTypes.Request} */ req,
+    /** @type {expressTypes.Response} */ res
+  ) => {
+    let { username } = req.body;
+    /** @type {mysqlTypes.Pool}  */
+    const db = req.app.get("db");
+
+    db.query(
+      `select balance from profile where username="${username}";`,
+      async (err, rows, fields) => {
+        if (err) {
+          console.log(err);
+          return res.json({ error: err.sqlMessage });
+        }
+
+        console.log(rows[0]);
+
+        // check if user is already in
+        if (rows.length === 0) {
+          return res({ error: "Something went wrong" });
+        }
+
+        
+
+        return res.json({
+          token: null,
+          error: null,
+          balance: rows[0]?.balance,
+        });
+         
+      }
+    );
+  },
   entry: async (
     /** @type {expressTypes.Request} */ req,
     /** @type {expressTypes.Response} */ res
@@ -348,9 +382,7 @@ const controller = {
 
       let totalfare = await new Promise((resolve, reject) => {
         db.query(
-          `SELECT count(*) as vst ,s.station_name,s.station_code  from transactions t 
-          JOIN stations s  ON t.station=s.station_code 
-          group by station ORDER BY vst DESC ;`,
+          `SELECT SUM(fare) as fc from transactions t ;`,
           (err2, rows2) => {
             if (err2) {
               // console.log(err);
@@ -359,9 +391,9 @@ const controller = {
 
           //   console.log(rows[0].agent,rows2);
             if (rows2?.length === 0) {
-              return reject("No agent found");
+              return reject("Error");
               }
-            resolve({ err: false, val: rows2[0].vst, station: rows2[0].station_name,station_code:rows2[0].station_code });
+            resolve({ err: false, val: rows2[0].fc });
           }
         );
       }).catch((err) => {
@@ -371,7 +403,7 @@ const controller = {
       // if (mostvisited.err) {
       //   res.json({ journeys: rows, aggregates: {mostvisited} });
       // }
-      return res.json({ journeys: rows, aggregates: {mostvisited, } });
+      return res.json({ journeys: rows, aggregates: {mostvisited, totalfare} });
     });
   },
   finalStatusWH: (
