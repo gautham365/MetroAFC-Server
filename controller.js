@@ -2,7 +2,10 @@ const expressTypes = require("express");
 const mysqlTypes = require("mysql");
 const { Server } = require("socket.io");
 function calculateFare(c1, c2) {
-  return Math.abs(c1[0] - c2[0]) + Math.abs(c1[1] - c2[1]);
+  let dist = Math.abs(c1[0] - c2[0]) + Math.abs(c1[1] - c2[1]);
+  // calculate fare based on distance and set min fare to 10
+  console.log(dist);
+  return Math.max(10, dist * 2);
 }
 
 function delay(time) {
@@ -321,7 +324,54 @@ const controller = {
         return res.status(400).json({ error: "No journeys found" });
       }
 
-      return res.json({ journeys: rows });
+      let mostvisited = await new Promise((resolve, reject) => {
+        db.query(
+          `SELECT count(*) as vst ,s.station_name,s.station_code  from transactions t 
+          JOIN stations s  ON t.station=s.station_code 
+          group by station ORDER BY vst DESC ;`,
+          (err2, rows2) => {
+            if (err2) {
+              // console.log(err);
+              return reject(err2.sqlMessage);
+            }
+
+          //   console.log(rows[0].agent,rows2);
+            if (rows2?.length === 0) {
+              return reject("No agent found");
+              }
+            resolve({ err: false, val: rows2[0].vst, station: rows2[0].station_name,station_code:rows2[0].station_code });
+          }
+        );
+      }).catch((err) => {
+        return {err: err.sqlMessage, val:0,station:null,station_code:null};
+      });
+
+      let totalfare = await new Promise((resolve, reject) => {
+        db.query(
+          `SELECT count(*) as vst ,s.station_name,s.station_code  from transactions t 
+          JOIN stations s  ON t.station=s.station_code 
+          group by station ORDER BY vst DESC ;`,
+          (err2, rows2) => {
+            if (err2) {
+              // console.log(err);
+              return reject(err2.sqlMessage);
+            }
+
+          //   console.log(rows[0].agent,rows2);
+            if (rows2?.length === 0) {
+              return reject("No agent found");
+              }
+            resolve({ err: false, val: rows2[0].vst, station: rows2[0].station_name,station_code:rows2[0].station_code });
+          }
+        );
+      }).catch((err) => {
+        return {err: err.sqlMessage, val:0,station:null,station_code:null};
+      });
+
+      // if (mostvisited.err) {
+      //   res.json({ journeys: rows, aggregates: {mostvisited} });
+      // }
+      return res.json({ journeys: rows, aggregates: {mostvisited, } });
     });
   },
   finalStatusWH: (
