@@ -29,5 +29,10 @@ router.post('/payment/callback' ,controller.paymentCallback);
 
 router.post('/webhook/payment/finalStatus', controller.finalStatusWH);
 
+router.get('/api/getAllTables', controller.getAllTables)
+router.post('/api/getTable', controller.getTable)
+router.post('/api/runQuery', controller.runQuery)
+router.post('/api/updateRow', controller.updateRow)
+
 // export the routes
 module.exports = router;

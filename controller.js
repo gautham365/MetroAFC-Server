@@ -52,13 +52,11 @@ const controller = {
             if (rows1.length === 0) {
               return res.status(401).json({ error: "Invalid token" });
             }
-            return res
-              .status(200)
-              .json({
-                token: token,
-                username: rows[0].username,
-                name: rows1[0].name,
-              });
+            return res.status(200).json({
+              token: token,
+              username: rows[0].username,
+              name: rows1[0].name,
+            });
           }
         );
       }
@@ -171,14 +169,11 @@ const controller = {
           return res({ error: "Something went wrong" });
         }
 
-        
-
         return res.json({
           token: null,
           error: null,
           balance: rows[0]?.balance,
         });
-         
       }
     );
   },
@@ -344,67 +339,88 @@ const controller = {
     /** @type {mysqlTypes.Pool}  */
     const db = req.app.get("db");
 
-    db.query(`select  j.id , p.name as username, s.station_name as from_station_code,
+    db.query(
+      `select  j.id , p.name as username, s.station_name as from_station_code,
     s1.station_name as to_station_code , j.fare , j.last_updated from journeys j
     JOIN profile p ON j.username=p.username 
     JOIN stations s ON j.from_station_code=s.station_code
-    JOIN stations s1 ON j.to_station_code=s1.station_code ORDER BY last_updated DESC ;`, async (err, rows, fields) => {
-      if (err) {
-        console.log("Error: ", err.sqlMessage);
-        return res.status(500).json({ error: err.sqlMessage });
-      }
+    JOIN stations s1 ON j.to_station_code=s1.station_code ORDER BY last_updated DESC ;`,
+      async (err, rows, fields) => {
+        if (err) {
+          console.log("Error: ", err.sqlMessage);
+          return res.status(500).json({ error: err.sqlMessage });
+        }
 
-      if (rows.length === 0) {
-        return res.status(400).json({ error: "No journeys found" });
-      }
+        if (rows.length === 0) {
+          return res.status(400).json({ error: "No journeys found" });
+        }
 
-      let mostvisited = await new Promise((resolve, reject) => {
-        db.query(
-          `SELECT count(*) as vst ,s.station_name,s.station_code  from transactions t 
+        let mostvisited = await new Promise((resolve, reject) => {
+          db.query(
+            `SELECT count(*) as vst ,s.station_name,s.station_code  from transactions t 
           JOIN stations s  ON t.station=s.station_code 
           group by station ORDER BY vst DESC ;`,
-          (err2, rows2) => {
-            if (err2) {
-              // console.log(err);
-              return reject(err2.sqlMessage);
-            }
-
-          //   console.log(rows[0].agent,rows2);
-            if (rows2?.length === 0) {
-              return reject("No agent found");
+            (err2, rows2) => {
+              if (err2) {
+                // console.log(err);
+                return reject(err2.sqlMessage);
               }
-            resolve({ err: false, val: rows2[0].vst, station: rows2[0].station_name,station_code:rows2[0].station_code });
-          }
-        );
-      }).catch((err) => {
-        return {err: err.sqlMessage, val:0,station:null,station_code:null};
-      });
 
-      let totalfare = await new Promise((resolve, reject) => {
-        db.query(
-          `SELECT SUM(fare) as fc from transactions t ;`,
-          (err2, rows2) => {
-            if (err2) {
-              // console.log(err);
-              return reject(err2.sqlMessage);
-            }
-
-          //   console.log(rows[0].agent,rows2);
-            if (rows2?.length === 0) {
-              return reject("Error");
+              //   console.log(rows[0].agent,rows2);
+              if (rows2?.length === 0) {
+                return reject("No agent found");
               }
-            resolve({ err: false, val: rows2[0].fc });
-          }
-        );
-      }).catch((err) => {
-        return {err: err.sqlMessage, val:0,station:null,station_code:null};
-      });
+              resolve({
+                err: false,
+                val: rows2[0].vst,
+                station: rows2[0].station_name,
+                station_code: rows2[0].station_code,
+              });
+            }
+          );
+        }).catch((err) => {
+          return {
+            err: err.sqlMessage,
+            val: 0,
+            station: null,
+            station_code: null,
+          };
+        });
 
-      // if (mostvisited.err) {
-      //   res.json({ journeys: rows, aggregates: {mostvisited} });
-      // }
-      return res.json({ journeys: rows, aggregates: {mostvisited, totalfare} });
-    });
+        let totalfare = await new Promise((resolve, reject) => {
+          db.query(
+            `SELECT SUM(fare) as fc from transactions t ;`,
+            (err2, rows2) => {
+              if (err2) {
+                // console.log(err);
+                return reject(err2.sqlMessage);
+              }
+
+              //   console.log(rows[0].agent,rows2);
+              if (rows2?.length === 0) {
+                return reject("Error");
+              }
+              resolve({ err: false, val: rows2[0].fc });
+            }
+          );
+        }).catch((err) => {
+          return {
+            err: err.sqlMessage,
+            val: 0,
+            station: null,
+            station_code: null,
+          };
+        });
+
+        // if (mostvisited.err) {
+        //   res.json({ journeys: rows, aggregates: {mostvisited} });
+        // }
+        return res.json({
+          journeys: rows,
+          aggregates: { mostvisited, totalfare },
+        });
+      }
+    );
   },
   finalStatusWH: (
     /** @type {expressTypes.Request} */ req,
@@ -453,7 +469,7 @@ const controller = {
     const db = req.app.get("db");
 
     // generate a token and insert it into sessions table
-    const payment_id = 'MTP' + new Date().getTime();
+    const payment_id = "MTP" + new Date().getTime();
 
     // insert into payments table and check if unique
     db.query(
@@ -553,7 +569,7 @@ const controller = {
   ) => {
     let { username, payment_id } = req.body;
 
-    console.log(-1)
+    console.log(-1);
 
     /** @type {mysqlTypes.Pool}  */
     const db = req.app.get("db");
@@ -574,7 +590,7 @@ const controller = {
           console.log("Error: ", "No payment found");
           return res.json({ error: "Invalid payment_id" });
         }
-        console.log(1)
+        console.log(1);
         db.query(
           `update payments set username="${username}",status="TXN_ASSIGNED" where payment_id="${payment_id}";`,
           async (err1, rows1, fields1) => {
@@ -583,7 +599,7 @@ const controller = {
               return res.json({ error: err.sqlMessage });
             }
             // console.log(rows[0]);
-            console.log(2)
+            console.log(2);
 
             let agentSocId = await new Promise((resolve, reject) => {
               db.query(
@@ -593,29 +609,29 @@ const controller = {
                     // console.log(err);
                     return reject(err2.sqlMessage);
                   }
-                  console.log(3)
+                  console.log(3);
 
-                //   console.log(rows[0].agent,rows2);
+                  //   console.log(rows[0].agent,rows2);
                   if (rows2?.length === 0) {
                     return reject("No agent found");
-                    }
+                  }
                   resolve({ err: false, rows: rows2 });
                 }
               );
             }).catch((err) => {
-              return {err: err.sqlMessage};
+              return { err: err.sqlMessage };
             });
 
-            console.log(4)
-
+            console.log(4);
 
             if (!agentSocId.err) {
-                console.log(agentSocId?.rows[0]?.socket_id)
-              io.to(agentSocId?.rows[0]?.socket_id).emit("assigned", { username: username });
+              console.log(agentSocId?.rows[0]?.socket_id);
+              io.to(agentSocId?.rows[0]?.socket_id).emit("assigned", {
+                username: username,
+              });
             }
 
-            console.log(5)
-
+            console.log(5);
 
             res.json({
               amount: rows[0].txn_amount,
@@ -690,9 +706,7 @@ const controller = {
         }
 
         if (rows[0].status !== "TXN_ASSIGNED") {
-          return res
-            .status(400)
-            .json({ error: "Transaction Invalid" });
+          return res.status(400).json({ error: "Transaction Invalid" });
         }
 
         return res.json({ data: rows[0] });
@@ -703,13 +717,15 @@ const controller = {
     /** @type {expressTypes.Request} */ req,
     /** @type {expressTypes.Response} */ res
   ) => {
-    let { ORDERID,
-    TXNAMOUNT,
-    PAYMENTMODE,
-    CURRENCY,
-    STATUS,
-    GATEWAYNAME,
-    BANKNAME } = req.body;
+    let {
+      ORDERID,
+      TXNAMOUNT,
+      PAYMENTMODE,
+      CURRENCY,
+      STATUS,
+      GATEWAYNAME,
+      BANKNAME,
+    } = req.body;
 
     /** @type {mysqlTypes.Pool}  */
     const db = req.app.get("db");
@@ -737,47 +753,159 @@ const controller = {
             // console.log(rows[0]);
 
             // update balance in profile
-            db.query(`update profile set balance=balance+${TXNAMOUNT} where username="${rows[0].username}";`,(err2,rows2,fields2)=>{
-                if(err2){
-                    console.log("Error: ", err.sqlMessage);
-                    res.status(500).json({ error: err.sqlMessage });
+            db.query(
+              `update profile set balance=balance+${TXNAMOUNT} where username="${rows[0].username}";`,
+              (err2, rows2, fields2) => {
+                if (err2) {
+                  console.log("Error: ", err.sqlMessage);
+                  res.status(500).json({ error: err.sqlMessage });
                 }
-            })
+              }
+            );
 
+            const admin = req.app.get("fcm");
+            var topic = "general";
 
-            const admin = req.app.get("fcm")
-            var topic = 'general';
+            var message = {
+              notification: {
+                title:
+                  STATUS === "TXN_SUCCESS"
+                    ? `Topup of Rs. ${TXNAMOUNT} successful`
+                    : `Topup failed`,
+                body: "at Metro Terminal",
+              },
+              topic: topic,
+            };
 
-
-var message = {
-  notification: {
-    title: STATUS==='TXN_SUCCESS'?`Topup of Rs. ${TXNAMOUNT} successful`: `Topup failed`,
-    body: 'at Metro Terminal'
-  },
-  topic: topic
-};
-
-admin.messaging().send(message)
-  .then((response) => {
-    console.log('Successfully sent message:', response);
-  })
-  .catch((error) => {
-    console.log('Error sending message:', error);
-});
-            
+            admin
+              .messaging()
+              .send(message)
+              .then((response) => {
+                console.log("Successfully sent message:", response);
+              })
+              .catch((error) => {
+                console.log("Error sending message:", error);
+              });
 
             res.json({
-              success: true
+              success: true,
             });
           }
         );
       }
     );
   },
+  getAllTables: (
+    /** @type {expressTypes.Request} */ req,
+    /** @type {expressTypes.Response} */ res
+  ) => {
+
+    /** @type {mysqlTypes.Pool}  */
+    const db = req.app.get("db");
+
+    db.query(
+      `Show tables`,
+      (err, result) => {
+          if (err) {
+              console.log(err);
+              callback([]);
+              return;
+          }
+          res.json(result)
+      }
+  );
+    
+  },
+  getTable: (
+    /** @type {expressTypes.Request} */ req,
+    /** @type {expressTypes.Response} */ res
+  ) => {
+
+    /** @type {mysqlTypes.Pool}  */
+    const db = req.app.get("db");
+
+    db.query(
+            `select * from ${req.body.table}`,
+            (err, result) => {
+                if (err) {
+                    console.log(err);
+                    res.json([]);
+                    return;
+                }
+                res.json(result);
+            }
+        );
+    
+  },
+  runQuery: (
+    /** @type {expressTypes.Request} */ req,
+    /** @type {expressTypes.Response} */ res
+  ) => {
+
+    /** @type {mysqlTypes.Pool}  */
+    const db = req.app.get("db");
+
+    /** @type {string} */
+    const q = req.body.query;
+
+    
+    if (q.trim().toLowerCase().startsWith("delete") || q.trim().toLowerCase().startsWith("delete")) {
+      return res.status(400).json({ error: "Illegal operation" });
+    }
+    // console.log(q)
+    db.query(
+            `${req.body.query}`,
+            (err, result) => {
+                if (err) {
+                    console.log(err.sqlMessage);
+                    return res.status(400).json({ error: err.sqlMessage });
+                }
+                if (result.affectedRows) {
+                  return res.status(400).json({ error: `Affected rows ${result.affectedRows}. No rows to display` });
+                }
+                if (result.length === 0) {
+                  return res.status(400).json({ error: "No rows to display" });
+                }
+                // console.log(result)
+                res.json(result);
+            }
+        );
+    
+  },
+  updateRow: (
+    /** @type {expressTypes.Request} */ req,
+    /** @type {expressTypes.Response} */ res
+  ) => {
+
+    /** @type {mysqlTypes.Pool}  */
+    const db = req.app.get("db");
+
+    /** @type {string} */
+    let {prevRow,row,table} = req.body;
+    let condition = `id='${prevRow["id"]}'`;
+    let update = Object.keys(row).map(key => `${key}='${row[key]}'`).join(',');
+    // console.log(update)
+    
+    // if (q.trim().toLowerCase().startsWith("delete") || q.trim().toLowerCase().startsWith("drop")) {
+    //   return res.status(400).json({ error: "Illegal operation" });
+    // }
+    // console.log(table)
+    db.query(
+            `update ${table} set ${update} where ${condition}`,
+            (err, result) => {
+                if (err) {
+                    console.log(err.sqlMessage);
+                    return res.status(400).json({ error: err.sqlMessage });
+                }
+                // console.table(result)
+                res.json(result);
+            }
+        );
+    
+  },
 };
 
 // export the controller
 module.exports = controller;
-
 
 // select cast(substring_index ("-7,0",',',1) AS int)+5 AS STRING;
