@@ -382,7 +382,7 @@ const controller = {
 
       let totalfare = await new Promise((resolve, reject) => {
         db.query(
-          `SELECT SUM(fare) as fc from transactions t ;`,
+          `SELECT getFareAggs() as fc;`,
           (err2, rows2) => {
             if (err2) {
               // console.log(err);
@@ -404,6 +404,73 @@ const controller = {
       //   res.json({ journeys: rows, aggregates: {mostvisited} });
       // }
       return res.json({ journeys: rows, aggregates: {mostvisited, totalfare} });
+    });
+  },
+  getAllPayments: (
+    /** @type {expressTypes.Request} */ req,
+    /** @type {expressTypes.Response} */ res
+  ) => {
+    let { username } = req.body;
+    /** @type {mysqlTypes.Pool}  */
+    const db = req.app.get("db");
+
+    db.query(`SELECT y.id, y.payment_id ,p.name, y.bank_name, y.payment_mode , y.txn_amount , y.last_updated
+    FROM payments y
+    JOIN profile p ON y.username = p.username ORDER BY last_updated DESC ;`, async (err, rows, fields) => {
+      if (err) {
+        console.log("Error: ", err.sqlMessage);
+        return res.status(500).json({ error: err.sqlMessage });
+      }
+
+      if (rows.length === 0) {
+        return res.status(400).json({ error: "No journeys found" });
+      }
+
+      let mostpreferred = await new Promise((resolve, reject) => {
+        db.query(
+          `SELECT count(*) as num ,t.bank_name  from payments t 
+          group by t.bank_name  ORDER BY num DESC ;`,
+          (err2, rows2) => {
+            if (err2) {
+              // console.log(err);
+              return reject(err2.sqlMessage);
+            }
+
+          //   console.log(rows[0].agent,rows2);
+            if (rows2?.length === 0) {
+              return reject("No agent found");
+              }
+            resolve({ err: false, val: rows2[0].num, bank_name: rows2[0].bank_name });
+          }
+        );
+      }).catch((err) => {
+        return {err: err.sqlMessage, val:0, bank_name:null};
+      });
+
+      let totalfare = await new Promise((resolve, reject) => {
+        db.query(
+          `SELECT getPayAmtAggs() as fc;`,
+          (err2, rows2) => {
+            if (err2) {
+              // console.log(err);
+              return reject(err2.sqlMessage);
+            }
+
+          //   console.log(rows[0].agent,rows2);
+            if (rows2?.length === 0) {
+              return reject("Error");
+              }
+            resolve({ err: false, val: rows2[0].fc });
+          }
+        );
+      }).catch((err) => {
+        return {err: err.sqlMessage, val:0,station:null,station_code:null};
+      });
+
+      // if (mostvisited.err) {
+      //   res.json({ journeys: rows, aggregates: {mostvisited} });
+      // }
+      return res.json({ payments: rows, aggregates: {mostpreferred, totalfare} });
     });
   },
   finalStatusWH: (
@@ -430,7 +497,7 @@ const controller = {
     // insert into payments table and check if unique
 
     db.query(
-      `delete from payments where payment_id="${payment_id}" AND status in ("TXN_INIT","TXN_ASSIGNED");`,
+      `CALL remove_transaction("${payment_id}");`,
       async (err, rows, fields) => {
         if (err) {
           console.log("Error: ", err.sqlMessage);
