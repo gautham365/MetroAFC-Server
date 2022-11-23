@@ -803,6 +803,7 @@ const controller = {
             }
             // console.log(rows[0]);
 
+            if (STATUS==="TXN_SUCCESS") {
             // update balance in profile
             db.query(`update profile set balance=balance+${TXNAMOUNT} where username="${rows[0].username}";`,(err2,rows2,fields2)=>{
                 if(err2){
@@ -810,6 +811,7 @@ const controller = {
                     res.status(500).json({ error: err.sqlMessage });
                 }
             })
+          }
 
 
             const admin = req.app.get("fcm")
